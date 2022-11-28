@@ -1,153 +1,135 @@
 require('dotenv').config();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs')
-const User = require('../models/user');
-
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const User = require("../models/user");
 
 module.exports = {
-	userRegister: async (req, res) => {
+	register: async (req, res) => {
 		if (req.validateError) {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({ message: err.replace(/"/g, "") });
+				.send({ status: "fail", message: err.replace(/"/g, "") });
 		}
 
-		const data = req.body;
+		const { nama, email, password, phone, isAdmin = false } = req.body;
 
-		const emailExist = await User.findOne({ email: data.email });
+		const emailExist = await User.findOne({ email });
 		if (emailExist)
 			return res
 				.status(400)
-				.send({
-					status: "failed",
-					message: "Email sudah digunakan"
-				});
+				.send({ status: "fail", message: "Email sudah digunakan" });
 
 		const salt = await bcrypt.genSalt(10);
-		const hashPassword = await bcrypt.hash(data.password, salt);
-		data.password = hashPassword
+		const hashPassword = await bcrypt.hash(password, salt);
 
-		const user = new User(data);
+		const user = new User({
+			nama,
+			email,
+			password: hashPassword,
+			phone,
+			isAdmin,
+		});
 
 		try {
 			await user.save();
 			res
 				.status(201)
-				.send({
-					status: "success",
-					message: "akun berhasil dibuat"
-				});
+				.send({ status: "success", message: "akun berhasil dibuat" });
 		} catch (error) {
-			res.status(500).send({
-				message: error.message
-			});
+			res.status(500).send({ status: "fail", message: error.message });
 		}
 	},
 
-	userLogin: async (req, res) => {
+	login: async (req, res) => {
 		if (req.validateError) {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({ message: err.replace(/"/g, "") });
+				.send({ status: "fail", message: err.replace(/"/g, "") });
 		}
 
-		const data = req.body;
+		const { email, password } = req.body;
 
-		const user = await User.findOne({ email: data.email });
+		const user = await User.findOne({ email });
 		if (!user)
 			return res
 				.status(404)
-				.send({ message: "user tidak ditemukan" });
+				.send({ status: "fail", message: "user tidak ditemukan" });
 
-		const checkPass = await bcrypt.compare(data.password, user.password);
-		if (!checkPass)
+		const validPass = await bcrypt.compare(password, user.password);
+		if (!validPass)
 			return res
 				.status(400)
-				.send({
-					message: "password yang dimasukkan salah!"
-				});
+				.send({ status: "fail", message: "password yang dimasukkan salah!" });
 
-		const id = user._id;
-		const token = jwt.sign({ user }, process.env.SECRET_KEY);
-		res.header('user-token', token).status(200).json({
-			message: "sukses login!",
-			token,
-			id
-		})
+		const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY);
+		res.send({
+			status: "success",
+			message: "user berhasil login",
+			accessToken: token,
+		});
 	},
 
-	getAllUser: async (req, res) => {
-		try {
-			const user = await User.find({}, "-__v")
+	getProfile: async (req, res) => {
+		const _id = req.user;
 
-			res.status(200).json({
-				message: "Berhasil ambil data user",
-				data: user
-			})
+		try {
+			const user = await User.findOne({ _id }, "-password -isAdmin");
+
+			res.send({ status: "success", message: "user ditemukan", data: user });
 		} catch (error) {
-			res.status(500).json({ message: "Server Error" })
+			res.status(500).send({ status: "fail", message: error.message });
 		}
 	},
 
-	getUserByID: async (req, res) => {
-		try {
-			const user = await User.findById(req.params.id, "-__v")
+	updateProfile: async (req, res) => {
+		const _id = req.user;
 
-			if (!user) {
-				res.status(404).json({
-					message: "Data tidak ditemukan"
-				});
-			} else {
-				res.status(200).json({
-					message: "Data yang dicari",
-					data: user
-				})
+		try {
+			const oldUser = await User.findOne({ _id });
+
+			let hashPassword;
+			if (req.body.password) {
+				const salt = await bcrypt.genSalt(10);
+				hashPassword = await bcrypt.hash(req.body.password, salt);
 			}
+
+			const data = {
+				nama: req.body.nama || oldUser.nama,
+				email: req.body.email || oldUser.email,
+				password: hashPassword || oldUser.password,
+				umur: req.body.umur || oldUser.umur,
+			};
+
+			const user = await User.findOneAndUpdate({ _id }, { ...data });
+			res.send({
+				status: "success",
+				message: "profil berhasil diperbarui",
+			});
 		} catch (error) {
-			res.status(500).json({ message: "Server Error" })
+			res.status(500).send({ status: "fail", message: error.message });
 		}
 	},
 
-	deleteUserByID: async (req, res) => {
+	getUser: async (req, res) => {
+		const { id } = req.params;
 		try {
-			const user = await User.findById(req.params.id, "-__v")
+			const user = await User.findOne({ _id: id }, "-password");
 
-			if (!user) {
-				res.status(404).json({
-					message: "data tidak ditemukan"
-				});
-			} else {
-				user.deleteOne()
-				res.status(201).json(
-					{
-						message: "Data berhasil dihapus"
-					})
-			}
+			if (!user)
+				return res
+					.status(404)
+					.send({ status: "fail", message: "user tidak ditemukan" });
+
+			res.send({
+				status: "success",
+				message: "user berhasil ditemukan",
+				data: user,
+			});
 		} catch (error) {
-			res.status(500).json({ message: "Server Error" })
+			res.status(500).send({ status: "fail", message: error.message });
 		}
 	},
 
-	updateUserByID: async (req, res) => {
-		try {
-			const user = await User.findById(req.params.id, "-__v")
-			const data = req.body
-
-			const salt = await bcrypt.genSalt(10);
-			const hashPassword = await bcrypt.hash(data.password, salt);
-			data.password = hashPassword
-
-
-			Object.assign(user, req.body)
-			await user.save();
-			res.status(201).send({
-				message: "Update user",
-				data: user
-			})
-		} catch (error) {
-			res.status(500).json({ message: error.message })
-		}
-	}
 }
