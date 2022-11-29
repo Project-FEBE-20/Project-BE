@@ -6,13 +6,13 @@ module.exports = async (req, res, next) => {
 	try {
 		const user = await User.findOne({ _id });
 
-		if (!user.isDokter)
+		if (user.role==false)
 			return res
 				.status(403)
-				.send({ status: "fail", msg: "user tidak memiliki akses" });
+				.send({ status: res.statusCode, message: "user tidak memiliki akses" });
 
 		next();
 	} catch (error) {
-		res.status(500).send({ status: "fail", msg: error.message });
+		res.status(500).send({ status: res.statusCode, message: error.message });
 	}
 };

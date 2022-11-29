@@ -9,16 +9,16 @@ module.exports = {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({ status: "fail", message: err.replace(/"/g, "") });
+				.send({  message: err.replace(/"/g, "") });
 		}
 
-		const { nama, email, password, phone, isAdmin = false } = req.body;
+		const { nama, email, password, phone, role = false } = req.body;
 
 		const emailExist = await User.findOne({ email });
 		if (emailExist)
 			return res
 				.status(400)
-				.send({ status: "fail", message: "Email sudah digunakan" });
+				.send({ message: "Email sudah digunakan" });
 
 		const salt = await bcrypt.genSalt(10);
 		const hashPassword = await bcrypt.hash(password, salt);
@@ -28,16 +28,16 @@ module.exports = {
 			email,
 			password: hashPassword,
 			phone,
-			isAdmin,
+			role,
 		});
 
 		try {
 			await user.save();
 			res
 				.status(201)
-				.send({ status: "success", message: "akun berhasil dibuat" });
+				.send({ status:res.statusCode, message: "akun berhasil dibuat" });
 		} catch (error) {
-			res.status(500).send({ status: "fail", message: error.message });
+			res.status(500).send({ status:res.statusCode, message: error.message });
 		}
 	},
 
@@ -46,7 +46,7 @@ module.exports = {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({ status: "fail", message: err.replace(/"/g, "") });
+				.send({ message: err.replace(/"/g, "") });
 		}
 
 		const { email, password } = req.body;
@@ -55,19 +55,20 @@ module.exports = {
 		if (!user)
 			return res
 				.status(404)
-				.send({ status: "fail", message: "user tidak ditemukan" });
+				.send({ message: "user tidak ditemukan" });
 
-		const validPass = await bcrypt.compare(password, user.password);
-		if (!validPass)
+		const checkPass = await bcrypt.compare(password, user.password);
+		if (!checkPass)
 			return res
 				.status(400)
-				.send({ status: "fail", message: "password yang dimasukkan salah!" });
+				.send({ message: "password yang dimasukkan salah!" });
+		const id = user._id
 
 		const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY);
 		res.send({
-			status: "success",
-			message: "user berhasil login",
-			accessToken: token,
+			message: "Sukses Login!",
+			token,
+			id,
 		});
 	},
 
@@ -75,7 +76,7 @@ module.exports = {
 		const _id = req.user;
 
 		try {
-			const user = await User.findOne({ _id }, "-password -isAdmin");
+			const user = await User.findOne({ _id }, "-password -role");
 
 			res.send({ status: "success", message: "user ditemukan", data: user });
 		} catch (error) {
@@ -120,15 +121,15 @@ module.exports = {
 			if (!user)
 				return res
 					.status(404)
-					.send({ status: "fail", message: "user tidak ditemukan" });
+					.send({ status: res.statusCode, message: "user tidak ditemukan" });
 
 			res.send({
-				status: "success",
+				status:res.statusCode,
 				message: "user berhasil ditemukan",
 				data: user,
 			});
 		} catch (error) {
-			res.status(500).send({ status: "fail", message: error.message });
+			res.status(500).send({ status:res.statusCode, message: error.message });
 		}
 	},
 
