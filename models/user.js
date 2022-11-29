@@ -6,6 +6,7 @@ const userSchema = new Schema({
 	email: { type: String, required: true, unique: true },
 	password: { type: String, required: true, unique: true, min:6},
 	phone: { type: String, required: true },
+	isDokter:{type: Boolean, default: false},
 });
 
 const User = mongoose.model("user", userSchema);
