@@ -12,7 +12,7 @@ module.exports = {
 				.send({  message: err.replace(/"/g, "") });
 		}
 
-		const { nama, email, password, phone, role = false } = req.body;
+		const { nama, email, password, phone, role} = req.body;
 
 		const emailExist = await User.findOne({ email });
 		if (emailExist)
@@ -100,16 +100,15 @@ module.exports = {
 				nama: req.body.nama || oldUser.nama,
 				email: req.body.email || oldUser.email,
 				password: hashPassword || oldUser.password,
-				umur: req.body.umur || oldUser.umur,
+				phone: req.body.phone || oldUser.phone,
 			};
 
 			const user = await User.findOneAndUpdate({ _id }, { ...data });
-			res.send({
-				status: "success",
+			res.status(201).send({ status:res.statusCode,
 				message: "profil berhasil diperbarui",
 			});
 		} catch (error) {
-			res.status(500).send({ status: "fail", message: error.message });
+			res.status(500).send({ status: res.statusCode, message: error.message });
 		}
 	},
 
