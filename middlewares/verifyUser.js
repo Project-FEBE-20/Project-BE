@@ -6,7 +6,7 @@ module.exports = async (req, res, next) => {
 	try {
 		const user = await User.findOne({ _id });
 
-		if (user.role==false)
+		if (user.role=="user")
 			return res
 				.status(403)
 				.send({ status: res.statusCode, message: "user tidak memiliki akses" });
