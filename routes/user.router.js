@@ -1,22 +1,27 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 
 const {
-    userRegister,
-    userLogin,
-    getAllUser,
-    getUserByID,
-    deleteUserByID,
-    updateUserByID,
-} = require("../controllers/user.controller");
-const { registerValidation, loginValidation } = require("../middlewares/validation");
-const verifyToken=require("../middlewares/user.auth")
+	registerValidation,
+	loginValidation,
+} = require("../middlewares/validation");
 
-router.post("/register", registerValidation, userRegister);
-router.post("/login", loginValidation, userLogin);
-router.get("/", getAllUser);
-router.get("/:id", getUserByID);
-router.delete("/:id", verifyToken, deleteUserByID);
-router.patch("/:id", verifyToken, updateUserByID);
+const verifyToken = require("../middlewares/user.auth");
+const verifyUser = require("../middlewares/verifyuser");
+
+const {
+	register,
+	login,
+	getProfile,
+	updateProfile,
+	getUser,
+} = require("../controllers/user.controller");
+
+router.post("/register", registerValidation, register);
+router.post("/login", loginValidation, login);
+
+router.get("/profile", verifyToken, getProfile);
+router.put("/profile", verifyToken, updateProfile);
+
+router.get("/:id", verifyToken, verifyUser, getUser);
 
 module.exports = router;

@@ -8,13 +8,14 @@ const {
   deleteArticleByID, 
   updateArticleByID
 } = require("../controllers/article.controller");
-// const articleAddAuth = require("../middlewares/add.article.auth");
-// const articleAuth = require("../middlewares/article.auth");
 
-router.get("/", getAllArticle);
-router.get("/:id", getArticleByID);  
-router.post("/add", addArticle);
-router.delete("/:id", deleteArticleByID);
-router.patch("/:id", updateArticleByID);
+const verifyToken = require("../middlewares/user.auth");
+const verifyUser = require("../middlewares/verifyuser");
+
+router.get("/", verifyToken, getAllArticle);
+router.get("/:id", verifyToken, getArticleByID);  
+router.post("/add", verifyToken, verifyUser, addArticle);
+router.delete("/:id", verifyToken, verifyUser, deleteArticleByID);
+router.patch("/:id", verifyToken, verifyUser, updateArticleByID);
 
 module.exports = router;
