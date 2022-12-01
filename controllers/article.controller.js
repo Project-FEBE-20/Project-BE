@@ -36,15 +36,15 @@ module.exports = {
   },
 
   addArticle: (req, res) => {
-    const token = req.header('doctor-token')
-    const verified = jwt.verify(token, process.env.SECRET_KEY)
+    // const token = req.header('doctor-token')
+    // const verified = jwt.verify(token, process.env.SECRET_KEY)
 
     const article = new Article({
       title: req.body.title,
       category: req.body.category,
       content: req.body.content,
       date: req.body.date,
-      writter: verified.doctor._id
+      writter: req.body.writter
     })
     //writter is taken according to the token that has been entered in the header
 
