@@ -5,13 +5,12 @@ const articleSchema = new Schema({
   title: String,
   category: String,
   content: String,
-  date: String,
   writter : {
     type: mongoose.ObjectId,
-    ref: "Doctor"
+    ref: "user"
   },
-})
+},{ timestamps: true })
 
-const Article = mongoose.model("Article", articleSchema)
+const Article = mongoose.model("article", articleSchema)
 
 module.exports = Article

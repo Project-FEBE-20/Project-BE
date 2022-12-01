@@ -15,9 +15,12 @@ db.
         console.log(err);
     })
 
+app.use(cors({
+    origin:"*"
+}))
 app.use(express.json())
 app.use(allRoutes)
-app.use(cors())
+
 
 app.listen(PORT, () => {
     console.log("Server Running on Port " + PORT);
