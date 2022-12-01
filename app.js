@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express()
 const db = require('./config/db');
+var cors = require('cors');
 
 const allRoutes = require('./routes');
 
@@ -16,6 +17,7 @@ db.
 
 app.use(express.json())
 app.use(allRoutes)
+app.use(cors())
 
 app.listen(PORT, () => {
     console.log("Server Running on Port " + PORT);
