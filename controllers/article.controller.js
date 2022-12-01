@@ -43,7 +43,7 @@ module.exports = {
       title: req.body.title,
       category: req.body.category,
       content: req.body.content,
-      date: req.body.date,
+      date: new Date().toString(),
       writter: req.body.writter
     })
     //writter is taken according to the token that has been entered in the header
