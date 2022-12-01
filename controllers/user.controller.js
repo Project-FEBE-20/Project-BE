@@ -76,7 +76,7 @@ module.exports = {
 		const _id = req.user;
 
 		try {
-			const user = await User.findOne({ _id }, "-password -role");
+			const user = await User.findOne({ _id }, "-password");
 
 			res.send({
 				status: res.statusCode,
