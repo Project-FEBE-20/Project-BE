@@ -10,7 +10,7 @@ const {
 } = require("../controllers/article.controller");
 
 const verifyToken = require("../middlewares/user.auth");
-const verifyUser = require("../middlewares/verifyuser");
+const verifyUser = require("../middlewares/verifyUser");
 
 router.get("/", verifyToken, getAllArticle);
 router.get("/:id", verifyToken, getArticleByID);  
