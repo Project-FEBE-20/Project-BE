@@ -5,7 +5,7 @@ const Article = require("../models/article");
 module.exports = {
   getAllArticle: async (req, res) => {
     try {
-      const articles = await Article.find({}, "-__v")
+      const articles = await Article.find({}, "-__v").populate("writter","name")
 
       res.status(200).json({
         message: "Get Articles Data",
