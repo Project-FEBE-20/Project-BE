@@ -8,7 +8,7 @@ const articleSchema = new Schema({
   date: String,
   writter : {
     type: mongoose.ObjectId,
-    ref: "Doctor"
+    ref: "User"
   },
 })
 
