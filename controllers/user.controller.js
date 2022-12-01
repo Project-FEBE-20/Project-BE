@@ -9,10 +9,10 @@ module.exports = {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({  message: err.replace(/"/g, "") });
+				.send({ message: err.replace(/"/g, "") });
 		}
 
-		const { nama, email, password, phone, role} = req.body;
+		const { nama, email, password, phone, role } = req.body;
 
 		const emailExist = await User.findOne({ email });
 		if (emailExist)
@@ -35,9 +35,9 @@ module.exports = {
 			await user.save();
 			res
 				.status(201)
-				.send({ status:res.statusCode, message: "akun berhasil dibuat" });
+				.send({ status: res.statusCode, message: "akun berhasil dibuat" });
 		} catch (error) {
-			res.status(500).send({ status:res.statusCode, message: error.message });
+			res.status(500).send({ status: res.statusCode, message: error.message });
 		}
 	},
 
@@ -78,9 +78,16 @@ module.exports = {
 		try {
 			const user = await User.findOne({ _id }, "-password -role");
 
-			res.send({ status: "success", message: "user ditemukan", data: user });
+			res.send({
+				status: res.statusCode,
+				message: "user ditemukan",
+				data: user
+			});
 		} catch (error) {
-			res.status(500).send({ status: "fail", message: error.message });
+			res.status(500).send({
+				status: res.statusCode,
+				message: error.message
+			});
 		}
 	},
 
@@ -88,7 +95,7 @@ module.exports = {
 		const _id = req.user;
 
 		try {
-			const oldUser = await User.findOne({ _id });
+			const dataUser = await User.findOne({ _id });
 
 			let hashPassword;
 			if (req.body.password) {
@@ -97,38 +104,22 @@ module.exports = {
 			}
 
 			const data = {
-				nama: req.body.nama || oldUser.nama,
-				email: req.body.email || oldUser.email,
-				password: hashPassword || oldUser.password,
-				phone: req.body.phone || oldUser.phone,
+				nama: req.body.nama || dataUser.nama,
+				email: req.body.email || dataUser.email,
+				password: hashPassword || dataUser.password,
+				phone: req.body.phone || dataUser.phone,
 			};
 
 			const user = await User.findOneAndUpdate({ _id }, { ...data });
-			res.status(201).send({ status:res.statusCode,
+			res.status(201).send({
+				status: res.statusCode,
 				message: "profil berhasil diperbarui",
 			});
 		} catch (error) {
-			res.status(500).send({ status: res.statusCode, message: error.message });
-		}
-	},
-
-	getUser: async (req, res) => {
-		const { id } = req.params;
-		try {
-			const user = await User.findOne({ _id: id }, "-password");
-
-			if (!user)
-				return res
-					.status(404)
-					.send({ status: res.statusCode, message: "user tidak ditemukan" });
-
-			res.send({
-				status:res.statusCode,
-				message: "user berhasil ditemukan",
-				data: user,
+			res.status(500).send({
+				status: res.statusCode,
+				message: error.message
 			});
-		} catch (error) {
-			res.status(500).send({ status:res.statusCode, message: error.message });
 		}
 	},
 
