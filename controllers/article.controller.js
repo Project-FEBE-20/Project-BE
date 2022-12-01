@@ -5,7 +5,7 @@ const Article = require("../models/article");
 module.exports = {
   getAllArticle: async (req, res) => {
     try {
-      const articles = await Article.find({}, "-__v").populate("writter","name")
+      const articles = await Article.find({}, "-__v").populate("writter","nama")
 
       res.status(200).json({
         message: "Get Articles Data",
@@ -18,7 +18,7 @@ module.exports = {
 
   getArticleByID: async (req, res) => {
     try {
-      const articles = await Article.findById(req.params.id, "-__v").populate("writter", "name")
+      const articles = await Article.findById(req.params.id, "-__v").populate("writter", "nama")
 
       if (!articles) {
         res.status(404).json({
