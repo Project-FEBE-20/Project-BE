@@ -5,12 +5,11 @@ const articleSchema = new Schema({
   title: String,
   category: String,
   content: String,
-  date: String,
   writter : {
     type: mongoose.ObjectId,
     ref: "user"
   },
-})
+},{ timestamps: true })
 
 const Article = mongoose.model("article", articleSchema)
 
