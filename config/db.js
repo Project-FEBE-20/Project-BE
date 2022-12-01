@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
+require('dotenv').config();
 
-const DB_URL = 'mongodb://localhost:27017/tanya-dokter'
 
-const db = mongoose.connect(DB_URL)
-
-module.exports = db
+module.exports = mongoose.connect(process.env.DB_URL);
