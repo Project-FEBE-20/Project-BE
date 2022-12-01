@@ -1,8 +1,7 @@
 require('dotenv').config();
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs')
-const User = require('../models/user');
-
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const User = require("../models/user");
 
 module.exports = {
 	register: async (req, res) => {
@@ -10,39 +9,35 @@ module.exports = {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({ message: err });
+				.send({ message: err.replace(/"/g, "") });
 		}
 
-		const data = req.body;
+		const { nama, email, password, phone, role } = req.body;
 
-		const emailExist = await User.findOne({ email: data.email });
+		const emailExist = await User.findOne({ email });
 		if (emailExist)
 			return res
 				.status(400)
-				.send({
-					status: "failed",
-					message: "Email sudah digunakan"
-				});
+				.send({ message: "Email sudah digunakan" });
 
 		const salt = await bcrypt.genSalt(10);
-		const hashPassword = await bcrypt.hash(data.password, salt);
-		data.password = hashPassword
+		const hashPassword = await bcrypt.hash(password, salt);
 
-		const user = new User(data);
+		const user = new User({
+			nama,
+			email,
+			password: hashPassword,
+			phone,
+			role,
+		});
 
 		try {
 			await user.save();
 			res
 				.status(201)
-				.send({
-					status: "success",
-					message: "akun berhasil dibuat"
-				});
+				.send({ status: res.statusCode, message: "akun berhasil dibuat" });
 		} catch (error) {
-			res.status(500).send({
-				status: "failed",
-				message: error.message
-			});
+			res.status(500).send({ status: res.statusCode, message: error.message });
 		}
 	},
 
@@ -51,7 +46,7 @@ module.exports = {
 			const err = req.validateError.details[0].message;
 			return res
 				.status(400)
-				.send({ status: "failed", message: err.message });
+				.send({ message: err.replace(/"/g, "") });
 		}
 
 		const { email, password } = req.body;
@@ -60,22 +55,72 @@ module.exports = {
 		if (!user)
 			return res
 				.status(404)
-				.send({ status: "failed", message: "user tidak ditemukan" });
+				.send({ message: "user tidak ditemukan" });
 
-		const validPass = await bcrypt.compare(password, user.password);
-		if (!validPass)
+		const checkPass = await bcrypt.compare(password, user.password);
+		if (!checkPass)
 			return res
 				.status(400)
-				.send({
-					status: "failed",
-					message: "password yang dimasukkan salah!"
-				});
+				.send({ message: "password yang dimasukkan salah!" });
+		const id = user._id
 
 		const token = jwt.sign({ _id: user._id }, process.env.SECRET_KEY);
 		res.send({
-			status: "success",
-			message: "user berhasil login",
-			accessToken: token,
+			message: "Sukses Login!",
+			token,
+			id,
 		});
 	},
+
+	getProfile: async (req, res) => {
+		const _id = req.user;
+
+		try {
+			const user = await User.findOne({ _id }, "-password -role");
+
+			res.send({
+				status: res.statusCode,
+				message: "user ditemukan",
+				data: user
+			});
+		} catch (error) {
+			res.status(500).send({
+				status: res.statusCode,
+				message: error.message
+			});
+		}
+	},
+
+	updateProfile: async (req, res) => {
+		const _id = req.user;
+
+		try {
+			const dataUser = await User.findOne({ _id });
+
+			let hashPassword;
+			if (req.body.password) {
+				const salt = await bcrypt.genSalt(10);
+				hashPassword = await bcrypt.hash(req.body.password, salt);
+			}
+
+			const data = {
+				nama: req.body.nama || dataUser.nama,
+				email: req.body.email || dataUser.email,
+				password: hashPassword || dataUser.password,
+				phone: req.body.phone || dataUser.phone,
+			};
+
+			const user = await User.findOneAndUpdate({ _id }, { ...data });
+			res.status(201).send({
+				status: res.statusCode,
+				message: "profil berhasil diperbarui",
+			});
+		} catch (error) {
+			res.status(500).send({
+				status: res.statusCode,
+				message: error.message
+			});
+		}
+	},
+
 }

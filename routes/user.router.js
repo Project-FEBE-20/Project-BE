@@ -1,13 +1,23 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 
 const {
-    register,
-    login
+	registerValidation,
+	loginValidation,
+} = require("../middlewares/validation");
+
+const verifyToken = require("../middlewares/user.auth");
+
+const {
+	register,
+	login,
+	getProfile,
+	updateProfile,
 } = require("../controllers/user.controller");
-const { registerValidation, loginValidation } = require("../middlewares/validation");
 
 router.post("/register", registerValidation, register);
 router.post("/login", loginValidation, login);
+
+router.get("/profile", verifyToken, getProfile);
+router.put("/profile", verifyToken, updateProfile);
 
 module.exports = router;

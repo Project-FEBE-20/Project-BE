@@ -1,31 +1,44 @@
 require('dotenv').config();
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 
-const verifyToken = (req, res, next) => {
-    const token = req.header('user-token')
-    if (!token) return res.status(400).json({
-        status: res.statusCode,
-        message: "Access Denied!"
-    })
+module.exports = async (req, res, next) => {
+	try {
+		if (!req.headers.authorization)
+			return res
+				.status(403)
+				.send({ status: res.statusCode, message: "user tidak memiliki akses" });
 
-    try {
-        const verified = jwt.verify(token, process.env.SECRET_KEY)
-        if (!verified) {
-            res.status(401).send({
-                message: "Unauthorized!",
-            });
-        } else if (verified.user._id != req.params.id) {
-            return res.status(403).json({
-                status: res.statusCode,
-                message: "Access Denied!"
-            });
-        }
-        next()
-    } catch (error) {
-        res.status(400).json({
-            status: res.statusCode,
-            message: "Invalid Token!"
-        });
-    }
-}
-module.exports = verifyToken
+		const token =
+			req.headers.authorization.split(" ")[1] || req.headers.authorization;
+
+		if (!token)
+			return res
+				.status(403)
+				.send({  status: res.statusCode, message: "user tidak memiliki akses" });
+		const verified = jwt.verify(token, process.env.SECRET_KEY);
+
+			if (!verified) {
+				return res.status(401).send({
+					message: "token tidak valid",
+				});
+			} else if (!verified._id) {
+				return res.status(403).json({
+					status: res.statusCode,
+					message: "token tidak valid"
+				});
+			}
+
+		const user = await User.findOne({ _id: verified._id }, "-password");
+
+		if (!user)
+			return res
+				.status(404)
+				.send({  message: "user tidak ditemukan" });
+
+		req.user = verified._id;
+		next();
+	} catch (error) {
+		res.status(500).send({ status: res.statusCode, message: error.message });
+	}
+};
