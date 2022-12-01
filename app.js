@@ -4,7 +4,8 @@ const db = require('./config/db');
 
 const allRoutes = require('./routes');
 
-const PORT = process.env.PORT || 3500
+require('dotenv').config();
+const PORT = process.env.PORT 
 
 db.
     then(() => {
